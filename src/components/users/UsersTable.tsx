@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, Trash2, Eye, Award } from "lucide-react";
+import { Ban, Trash2, Eye } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -152,9 +152,6 @@ export default function UsersTable() {
                     </button>
                     <button className="rounded-full p-2 text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors">
                       <Trash2 className="h-4 w-4" />
-                    </button>
-                    <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
-                      <Award className="h-4 w-4" />
                     </button>
                   </div>
                 </TableCell>

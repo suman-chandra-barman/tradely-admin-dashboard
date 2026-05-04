@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, KeyRound, Trash2 } from "lucide-react";
+import { Award, Ban, Eye, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -192,11 +192,14 @@ export default function TradiesTabs() {
                         <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100">
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button className="rounded-full p-2 text-amber-600 hover:bg-amber-50">
-                          <KeyRound className="h-4 w-4" />
+                        <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
+                          <Ban className="h-4 w-4" />
                         </button>
                         <button className="rounded-full p-2 text-rose-500 hover:bg-rose-50">
                           <Trash2 className="h-4 w-4" />
+                        </button>
+                        <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
+                          <Award className="h-4 w-4" />
                         </button>
                       </div>
                     </TableCell>
