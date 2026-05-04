@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, Trash2 } from "lucide-react";
+import { Ban, Trash2, Eye, Award } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import UserDetailsDialog from "@/components/users/UserDetailsDialog";
 
 const users = [
   {
@@ -108,7 +107,7 @@ const users = [
 export default function UsersTable() {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between mb-4">
         <CardTitle>All Users (8)</CardTitle>
       </CardHeader>
       <CardContent>
@@ -144,20 +143,18 @@ export default function UsersTable() {
                 </TableCell>
                 <TableCell className="text-zinc-500">{user.created}</TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
-                    <UserDetailsDialog
-                      name={user.name}
-                      id={user.id}
-                      email={user.email}
-                      phone={user.phone}
-                      joined={user.joined}
-                      status={user.status as "Active" | "Blocked"}
-                    />
-                    <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100">
+                  <div className="flex items-center gap-3">
+                    <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
                       <Ban className="h-4 w-4" />
                     </button>
-                    <button className="rounded-full p-2 text-rose-500 hover:bg-rose-50">
+                    <button className="rounded-full p-2 text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors">
                       <Trash2 className="h-4 w-4" />
+                    </button>
+                    <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
+                      <Award className="h-4 w-4" />
                     </button>
                   </div>
                 </TableCell>

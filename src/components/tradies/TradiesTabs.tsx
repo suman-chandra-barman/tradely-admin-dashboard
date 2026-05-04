@@ -143,7 +143,7 @@ export default function TradiesTabs() {
 
       <TabsContent value="tradies">
         <Card>
-          <CardHeader>
+          <CardHeader className="mb-4">
             <CardTitle>All Tradies</CardTitle>
           </CardHeader>
           <CardContent>
