@@ -92,7 +92,7 @@ const statusMap: Record<string, { label: string; variant: string }> = {
 export default function JobsTable() {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="mb-4">
         <CardTitle>All Jobs (8)</CardTitle>
       </CardHeader>
       <CardContent>
