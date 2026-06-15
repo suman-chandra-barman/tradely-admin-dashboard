@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { ToastContainer } from "react-toastify";
+import StoreProvider from "@/redux/StoreProvider";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -28,7 +30,10 @@ export default function RootLayout({
       className={`${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-zinc-50 font-sans text-zinc-900">
-        {children}
+        <StoreProvider>
+          <ToastContainer />
+          {children}
+        </StoreProvider>
       </body>
     </html>
   );

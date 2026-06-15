@@ -3,6 +3,19 @@
 :root {
   --background: #f6f7fb;
   --foreground: #18181b;
+  
+  /* Brand/Auth Light Colors */
+  --brand-primary: #ff6b00;
+  --brand-primary-hover: #e05e00;
+  --brand-primary-light: rgba(255, 107, 0, 0.1);
+  --auth-bg: #ffffff;
+  --auth-card-bg: #ffffff;
+  --auth-card-border: #ebebeb;
+  --auth-input-bg: #f4f4f6;
+  --auth-input-text: #18181b;
+  --auth-input-placeholder: #a1a1aa;
+  --auth-text-primary: #18181b;
+  --auth-text-secondary: #71717a;
 }
 
 @theme inline {
@@ -10,13 +23,19 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-manrope);
   --font-display: var(--font-space-grotesk);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  
+  /* Expose Custom Tailwind Classes */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-primary-light: var(--brand-primary-light);
+  --color-auth-bg: var(--auth-bg);
+  --color-auth-card-bg: var(--auth-card-bg);
+  --color-auth-card-border: var(--auth-card-border);
+  --color-auth-input-bg: var(--auth-input-bg);
+  --color-auth-input-text: var(--auth-input-text);
+  --color-auth-input-placeholder: var(--auth-input-placeholder);
+  --color-auth-text-primary: var(--auth-text-primary);
+  --color-auth-text-secondary: var(--auth-text-secondary);
 }
 
 body {
