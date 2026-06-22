@@ -1,6 +1,8 @@
 "use client";
 
-import { Eye, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,88 +14,68 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const jobs = [
-  {
-    title: "Kitchen Renovation",
-    customer: "Sarah Johnson",
-    tradie: "Alex Builder",
-    budget: "$8,500",
-    status: "Completed",
-    date: "2026-03-15",
-  },
-  {
-    title: "Electrical Repairs",
-    customer: "Mike Chen",
-    tradie: "Emma Electrician",
-    budget: "$450",
-    status: "In Progress",
-    date: "2026-04-10",
-  },
-  {
-    title: "Plumbing Fix",
-    customer: "Emily Davis",
-    tradie: "Tom Plumber",
-    budget: "$320",
-    status: "Accepted",
-    date: "2026-04-15",
-  },
-  {
-    title: "House Painting",
-    customer: "Sophie Brown",
-    tradie: "Lisa Painter",
-    budget: "$3,200",
-    status: "In Progress",
-    date: "2026-04-05",
-  },
-  {
-    title: "Bathroom Tiling",
-    customer: "Daniel Lee",
-    tradie: "Chris Tiler",
-    budget: "$2,100",
-    status: "Completed",
-    date: "2026-03-28",
-  },
-  {
-    title: "Roof Repair",
-    customer: "James Wilson",
-    tradie: "-",
-    budget: "$1,800",
-    status: "Posted",
-    date: "2026-04-18",
-  },
-  {
-    title: "Deck Building",
-    customer: "Olivia Martin",
-    tradie: "Mark Mason",
-    budget: "$5,500",
-    status: "Matched",
-    date: "2026-04-16",
-  },
-  {
-    title: "AC Installation",
-    customer: "Liam Taylor",
-    tradie: "-",
-    budget: "$2,400",
-    status: "Cancelled",
-    date: "2026-04-12",
-  },
-];
+import { useGetJobsQuery, useDeleteJobMutation } from "@/redux/api/jobsApi";
+import JobsTableSkeleton from "@/components/skeletons/JobsTableSkeleton";
+import JobDetailsDialog from "@/components/jobs/JobDetailsDialog";
 
 const statusMap: Record<string, { label: string; variant: string }> = {
-  Completed: { label: "Completed", variant: "default" },
-  "In Progress": { label: "In Progress", variant: "info" },
-  Accepted: { label: "Accepted", variant: "warning" },
-  Matched: { label: "Matched", variant: "secondary" },
-  Posted: { label: "Posted", variant: "muted" },
-  Cancelled: { label: "Cancelled", variant: "destructive" },
+  posted: { label: "Posted", variant: "warning" },
+  active: { label: "Active", variant: "info" },
+  matched: { label: "Matched", variant: "warning" },
+  accepted: { label: "Accepted", variant: "warning" },
+  in_progress: { label: "In Progress", variant: "info" },
+  completed: { label: "Completed", variant: "default" },
+  cancelled: { label: "Cancelled", variant: "destructive" },
+};
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return "";
+  try {
+    const d = new Date(dateString);
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    });
+  } catch {
+    return dateString;
+  }
 };
 
 export default function JobsTable() {
+  const searchParams = useSearchParams();
+  const status = searchParams.get("status") || "all";
+  const search = searchParams.get("search") || "";
+
+  const { data: response, isLoading, isFetching, isError } = useGetJobsQuery({
+    status,
+    search,
+  });
+
+  const [deleteJob] = useDeleteJobMutation();
+
+  const jobs = response?.data || [];
+
+  const handleDelete = async (id: number, title: string) => {
+    if (!window.confirm(`Are you sure you want to delete job "${title}"?`)) {
+      return;
+    }
+    try {
+      await deleteJob(id).unwrap();
+      toast.success("Job successfully deleted.");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to delete job.");
+    }
+  };
+
+  const isListLoading = isLoading || isFetching;
+
   return (
     <Card>
       <CardHeader className="mb-4">
-        <CardTitle>All Jobs (8)</CardTitle>
+        <CardTitle>
+          All Jobs ({isListLoading ? "..." : jobs.length})
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
@@ -109,32 +91,66 @@ export default function JobsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {jobs.map((job) => (
-              <TableRow key={job.title}>
-                <TableCell className="font-medium text-zinc-900">
-                  {job.title}
-                </TableCell>
-                <TableCell>{job.customer}</TableCell>
-                <TableCell className="text-zinc-500">{job.tradie}</TableCell>
-                <TableCell>{job.budget}</TableCell>
-                <TableCell>
-                  <Badge variant={statusMap[job.status].variant as never}>
-                    {statusMap[job.status].label}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-zinc-500">{job.date}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100">
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <button className="rounded-full p-2 text-rose-500 hover:bg-rose-50">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+            {isListLoading ? (
+              <JobsTableSkeleton />
+            ) : isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-8 text-rose-500 font-medium"
+                >
+                  Failed to load jobs. Please try again.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : jobs.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-8 text-zinc-500"
+                >
+                  No jobs found matching the filters.
+                </TableCell>
+              </TableRow>
+            ) : (
+              jobs.map((job) => {
+                const mappedStatus = statusMap[job.status] || {
+                  label: job.status,
+                  variant: "secondary",
+                };
+                return (
+                  <TableRow key={job.id}>
+                    <TableCell className="font-medium text-zinc-900">
+                      {job.title}
+                    </TableCell>
+                    <TableCell>{job.client_name}</TableCell>
+                    <TableCell className="text-zinc-500">
+                      {job.tradie_name || "—"}
+                    </TableCell>
+                    <TableCell>${job.budget}</TableCell>
+                    <TableCell>
+                      <Badge variant={mappedStatus.variant as any}>
+                        {mappedStatus.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-zinc-500">
+                      {formatDate(job.posted_at)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <JobDetailsDialog jobId={job.id} />
+                        <button
+                          onClick={() => handleDelete(job.id, job.title)}
+                          className="rounded-full p-2 text-rose-500 hover:bg-rose-50 transition-colors"
+                          title="Delete job"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </CardContent>

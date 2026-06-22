@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import JobsFilters from "@/components/jobs/JobsFilters";
 import JobsTable from "@/components/jobs/JobsTable";
 
@@ -10,8 +11,10 @@ export default function JobsPage() {
           Track job lifecycle and handle customer requests.
         </p>
       </div>
-      <JobsFilters />
-      <JobsTable />
+      <Suspense fallback={<div className="h-40 w-full animate-pulse rounded-2xl bg-zinc-100" />}>
+        <JobsFilters />
+        <JobsTable />
+      </Suspense>
     </div>
   );
 }
