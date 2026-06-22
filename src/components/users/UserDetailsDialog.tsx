@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,35 +15,47 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  useGetUserDetailsQuery,
   useToggleBlockUserMutation,
   useDeleteUserMutation,
 } from "@/redux/api/usersApi";
 import { toast } from "react-toastify";
 
 interface UserDetailsDialogProps {
-  name: string;
-  id: string;
-  email: string;
-  phone: string;
-  joined: string;
-  status: "Active" | "Blocked";
+  userId: number;
 }
 
-export default function UserDetailsDialog({
-  name,
-  id,
-  email,
-  phone,
-  joined,
-  status,
-}: UserDetailsDialogProps) {
+const formatDate = (dateString: string) => {
+  if (!dateString) return "";
+  try {
+    const d = new Date(dateString);
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    });
+  } catch {
+    return dateString;
+  }
+};
+
+export default function UserDetailsDialog({ userId }: UserDetailsDialogProps) {
+  const [open, setOpen] = useState(false);
+
+  const { data: response, isLoading, isError } = useGetUserDetailsQuery(userId, {
+    skip: !open,
+  });
+
   const [toggleBlock, { isLoading: isSuspending }] = useToggleBlockUserMutation();
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
 
+  const user = response?.data;
+
   const handleToggleBlock = async () => {
+    if (!user) return;
     try {
-      const isBlocked = status === "Blocked";
-      await toggleBlock({ id: Number(id), is_blocked: !isBlocked }).unwrap();
+      const isBlocked = user.is_blocked;
+      await toggleBlock({ id: userId, is_blocked: !isBlocked }).unwrap();
       toast.success(
         `User successfully ${isBlocked ? "activated" : "suspended"}.`
       );
@@ -52,19 +65,21 @@ export default function UserDetailsDialog({
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete user ${name}?`)) {
+    if (!user) return;
+    if (!window.confirm(`Are you sure you want to delete user ${user.name}?`)) {
       return;
     }
     try {
-      await deleteUser(Number(id)).unwrap();
+      await deleteUser(userId).unwrap();
       toast.success("User successfully deleted.");
+      setOpen(false);
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to delete user.");
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 transition-colors">
           <span className="sr-only">View details</span>
@@ -89,66 +104,84 @@ export default function UserDetailsDialog({
           <DialogTitle>User Details</DialogTitle>
           <DialogDescription>View user details</DialogDescription>
         </DialogHeader>
-        <div className="mt-4 flex items-center gap-4">
-          <div className="h-16 w-16 overflow-hidden rounded-2xl bg-zinc-100">
-            <img
-              src="https://i.pravatar.cc/120?img=32"
-              alt={name}
-              width={64}
-              height={64}
-            />
-          </div>
-          <div>
-            <p className="text-base font-semibold text-zinc-900">{name}</p>
-            <p className="text-sm text-zinc-500">{email}</p>
-          </div>
-        </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Name</Label>
-            <Input value={name} readOnly className="bg-zinc-50" />
-          </div>
-          <div className="space-y-2">
-            <Label>ID</Label>
-            <Input value={id} readOnly className="bg-zinc-50" />
-          </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input value={email} readOnly className="bg-zinc-50" />
-          </div>
-          <div className="space-y-2">
-            <Label>Phone</Label>
-            <Input value={phone} readOnly className="bg-zinc-50" />
-          </div>
-          <div className="space-y-2">
-            <Label>User Joined</Label>
-            <Input value={joined} readOnly className="bg-zinc-50" />
-          </div>
-          <div className="space-y-2">
-            <Label>Activity status</Label>
-            <div className="flex h-10 items-center">
-              <Badge variant={status === "Active" ? "default" : "destructive"}>
-                {status}
-              </Badge>
+
+        {isLoading ? (
+          <div className="mt-6 space-y-4 animate-pulse">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="h-4 w-1/4 bg-zinc-200 rounded" />
+                  <div className="h-10 bg-zinc-100 rounded-xl" />
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <div className="h-10 w-24 bg-zinc-200 rounded-xl" />
+              <div className="h-10 w-28 bg-zinc-200 rounded-xl" />
             </div>
           </div>
-        </div>
-        <div className="mt-6 flex items-center justify-end gap-3">
-          <Button
-            variant="secondary"
-            onClick={handleToggleBlock}
-            disabled={isSuspending}
-          >
-            {status === "Blocked" ? "Activate" : "Suspend"}
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            Delete User
-          </Button>
-        </div>
+        ) : isError ? (
+          <div className="mt-6 text-center text-rose-500 font-medium py-6">
+            Failed to load user details. Please try again.
+          </div>
+        ) : !user ? (
+          <div className="mt-6 text-center text-zinc-500 py-6">
+            User not found.
+          </div>
+        ) : (
+          <>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input value={user.name} readOnly className="bg-zinc-50" />
+              </div>
+              <div className="space-y-2">
+                <Label>ID</Label>
+                <Input value={String(user.id)} readOnly className="bg-zinc-50" />
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input value={user.phone_number || "—"} readOnly className="bg-zinc-50" />
+              </div>
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <Input value={user.location || "—"} readOnly className="bg-zinc-50" />
+              </div>
+              <div className="space-y-2">
+                <Label>Total Jobs</Label>
+                <Input value={String(user.total_jobs)} readOnly className="bg-zinc-50" />
+              </div>
+              <div className="space-y-2">
+                <Label>User Joined</Label>
+                <Input value={formatDate(user.created_at)} readOnly className="bg-zinc-50" />
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label>Activity status</Label>
+                <div className="flex h-10 items-center">
+                  <Badge variant={user.is_blocked ? "destructive" : "default"}>
+                    {user.is_blocked ? "Blocked" : "Active"}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <Button
+                variant="secondary"
+                onClick={handleToggleBlock}
+                disabled={isSuspending}
+              >
+                {user.is_blocked ? "Activate" : "Suspend"}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                Delete User
+              </Button>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

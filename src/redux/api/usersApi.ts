@@ -20,9 +20,16 @@ export const usersApi = baseApi.injectEndpoints({
       },
       providesTags: ["User"],
     }),
+    getUserDetails: builder.query<{ status: string; code: number; message: string; data: User }, number>({
+      query: (id) => ({
+        url: `/dashboard/users/${id}/`,
+        method: "GET",
+      }),
+      providesTags: ["User"],
+    }),
     toggleBlockUser: builder.mutation<any, { id: number; is_blocked: boolean }>({
       query: ({ id, is_blocked }) => ({
-        url: `/dashboard/users/${id}/`,
+        url: `/dashboard/users/${id}/block/`,
         method: "PATCH",
         body: { is_blocked },
       }),
@@ -30,7 +37,7 @@ export const usersApi = baseApi.injectEndpoints({
     }),
     deleteUser: builder.mutation<any, number>({
       query: (id) => ({
-        url: `/dashboard/users/${id}/`,
+        url: `/dashboard/users/${id}/delete/`,
         method: "DELETE",
       }),
       invalidatesTags: ["User"],
@@ -40,6 +47,7 @@ export const usersApi = baseApi.injectEndpoints({
 
 export const {
   useGetUsersQuery,
+  useGetUserDetailsQuery,
   useToggleBlockUserMutation,
   useDeleteUserMutation,
 } = usersApi;

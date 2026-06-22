@@ -136,17 +136,7 @@ export default function UsersTable() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <UserDetailsDialog
-                        name={user.name}
-                        id={String(user.id)}
-                        email={
-                          user.email ||
-                          `${user.name.toLowerCase().replace(/\s+/g, "")}@example.com`
-                        }
-                        phone={user.phone_number || "—"}
-                        joined={formatDate(user.created_at)}
-                        status={user.is_blocked ? "Blocked" : "Active"}
-                      />
+                      <UserDetailsDialog userId={user.id} />
                       <button
                         onClick={() =>
                           handleToggleBlock(user.id, user.is_blocked)
