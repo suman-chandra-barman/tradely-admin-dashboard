@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import TradiesFilters from "@/components/tradies/TradiesFilters";
 import TradiesTabs from "@/components/tradies/TradiesTabs";
 
@@ -10,8 +11,10 @@ export default function TradiesPage() {
           Manage trade professionals and onboarding requests.
         </p>
       </div>
-      <TradiesFilters />
-      <TradiesTabs />
+      <Suspense fallback={<div className="h-40 w-full animate-pulse rounded-2xl bg-zinc-100" />}>
+        <TradiesFilters />
+        <TradiesTabs />
+      </Suspense>
     </div>
   );
 }
