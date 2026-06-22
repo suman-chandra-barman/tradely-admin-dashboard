@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutGrid,
   Users,
@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useAppDispatch } from "@/redux/hooks";
+import { logout } from "@/redux/slices/authSlice";
+import { toast } from "react-toastify";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutGrid },
@@ -23,6 +26,14 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    toast.success("Logged out successfully.");
+    router.push("/signin");
+  };
 
   return (
     <aside className="fixed left-0 top-0 z-40 hidden h-screen w-60 flex-col justify-between border-r border-zinc-200/70 bg-white px-4 py-6 shadow-sm lg:flex">
@@ -51,10 +62,14 @@ export default function Sidebar() {
           })}
         </nav>
       </div>
-      <button className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-zinc-500 hover:bg-zinc-100">
+      <button
+        onClick={handleLogout}
+        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-zinc-500 hover:bg-zinc-100 cursor-pointer"
+      >
         <LogOut className="h-4 w-4" />
         Logout
       </button>
     </aside>
   );
 }
+

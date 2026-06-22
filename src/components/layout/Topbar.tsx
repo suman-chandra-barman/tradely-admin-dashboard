@@ -9,8 +9,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { logout, selectCurrentUser } from "@/redux/slices/authSlice";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function Topbar() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const currentUser = useAppSelector(selectCurrentUser);
+
+  const userName = currentUser?.name || "Admin User";
+  const userEmail = currentUser?.email || "admin@example.com";
+  const userImage = currentUser?.image || undefined;
+
+  // Get initials for Avatar fallback
+  const initials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase() || "AD";
+
+  const handleLogout = () => {
+    dispatch(logout());
+    toast.success("Logged out successfully.");
+    router.push("/signin");
+  };
+
   return (
     <header className="flex flex-wrap items-center justify-end gap-4 rounded-2xl border border-zinc-200/70 bg-white px-5 py-2">
       <div className="flex items-center gap-4">
@@ -20,39 +46,39 @@ export default function Topbar() {
         </button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 rounded-full border border-zinc-200/70 bg-white px-3 py-2 text-left shadow-sm">
+            <button className="flex items-center gap-3 rounded-full border border-zinc-200/70 bg-white px-3 py-2 text-left shadow-sm cursor-pointer">
               <Avatar className="h-8 w-8">
-                <AvatarImage
-                  src="https://i.pravatar.cc/100?img=12"
-                  alt="Admin"
-                />
-                <AvatarFallback>AA</AvatarFallback>
+                {userImage && <AvatarImage src={userImage} alt={userName} />}
+                <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
               <div className="hidden sm:block">
                 <p className="text-xs font-semibold text-zinc-900">
-                  Admin Angela
+                  {userName}
                 </p>
-                <p className="text-[11px] text-zinc-500">admin@gmail.com</p>
+                <p className="text-[11px] text-zinc-500">{userEmail}</p>
               </div>
               <ChevronDown className="h-4 w-4 text-zinc-500" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <div className="px-3 py-2">
-              <p className="text-xs font-semibold text-zinc-900">Admin</p>
-              <p className="text-xs text-zinc-500">admin@gmail.com</p>
+              <p className="text-xs font-semibold text-zinc-900">{userName}</p>
+              <p className="text-xs text-zinc-500">{userEmail}</p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <User className="h-4 w-4" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <Settings className="h-4 w-4" />
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-rose-500 focus:text-rose-500">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-rose-500 focus:text-rose-500 cursor-pointer"
+            >
               <LogOut className="h-4 w-4" />
               Sign Out
             </DropdownMenuItem>
@@ -62,3 +88,4 @@ export default function Topbar() {
     </header>
   );
 }
+

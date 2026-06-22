@@ -49,7 +49,7 @@ export default function ForgotPasswordVerifyPage() {
     }
     try {
       const response = await resendForgotPasswordOtp({
-        email_address: email.trim(),
+        email: email.trim(),
       }).unwrap();
 
       if (response?.success) {
@@ -101,8 +101,8 @@ export default function ForgotPasswordVerifyPage() {
     e.preventDefault();
     const otpValue = otp.join("");
     const validationError = validateVerifyForgotPasswordOtp({
-      email_address: email,
-      otp_code: otpValue,
+      email: email,
+      code: otpValue,
     });
     if (validationError) {
       toast.error(validationError);
@@ -111,17 +111,12 @@ export default function ForgotPasswordVerifyPage() {
 
     try {
       const response = await verifyForgotPasswordOtp({
-        email_address: email,
-        otp_code: otpValue,
+        email: email,
+        code: otpValue,
       }).unwrap();
 
       if (response?.success) {
-        dispatch(
-          setCredentials({
-            user: response.data.user,
-            tokens: response.data.tokens,
-          }),
-        );
+        localStorage.setItem("resetToken", response.data.reset_token);
         toast.success(response?.message || "OTP verified successfully.");
         router.push("/reset-password");
         return;

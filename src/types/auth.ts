@@ -18,13 +18,22 @@ export interface AuthFamily {
 
 export interface AuthUser {
   id?: number | string;
+  email?: string;
+  name?: string;
+  phone_number?: string | null;
+  role?: string;
+  image?: string | null;
+  is_verified?: boolean;
+  is_approved?: boolean;
+  created_at?: string;
+  client_profile?: any;
+  tradie_profile?: any;
+
+  // Backward compatibility keys
   user_id?: string;
   full_name?: string;
-  email?: string;
   email_address?: string;
-  phone_number?: string | null;
   whatsapp_number?: string;
-  role?: string;
   is_email_verified?: boolean;
   is_admin?: boolean;
   profile_image?: string | null;
@@ -33,7 +42,7 @@ export interface AuthUser {
 }
 
 export interface LoginRequest {
-  email_address: string;
+  email: string;
   password: string;
 }
 
@@ -45,32 +54,31 @@ export interface LoginResponseData {
 export type LoginResponse = ApiResponse<LoginResponseData>;
 
 export interface ForgotPasswordRequest {
-  email_address: string;
+  email: string;
 }
 
 export interface ForgotPasswordResponseData {
-  email_address: string;
-  purpose: string;
+  email?: string;
+  purpose?: string;
 }
 
-export type ForgotPasswordResponse = ApiResponse<ForgotPasswordResponseData>;
+export type ForgotPasswordResponse = ApiResponse<ForgotPasswordResponseData | null>;
 
 export interface VerifyForgotPasswordOtpRequest {
-  email_address: string;
-  otp_code: string;
+  email: string;
+  code: string;
 }
 
 export interface VerifyForgotPasswordOtpResponseData {
-  user: AuthUser;
-  tokens: AuthTokens;
+  reset_token: string;
 }
 
 export type VerifyForgotPasswordOtpResponse =
   ApiResponse<VerifyForgotPasswordOtpResponseData>;
 
 export interface ResetPasswordRequest {
+  reset_token: string;
   new_password: string;
-  confirm_password: string;
 }
 
 export interface ResetPasswordResponse {
@@ -79,13 +87,13 @@ export interface ResetPasswordResponse {
 }
 
 export interface ResendForgotPasswordOtpRequest {
-  email_address: string;
+  email: string;
 }
 
 export type ResendForgotPasswordOtpResponse = ApiResponse<{
-  email_address: string;
-  purpose: string;
-}>;
+  email?: string;
+  purpose?: string;
+} | null>;
 
 export interface RegisterRequest {
   full_name: string;
@@ -99,4 +107,5 @@ export interface VerifyEmailRequest {
   email: string;
   otp_code: string;
 }
+
 

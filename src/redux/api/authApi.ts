@@ -17,27 +17,37 @@ export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (credentials) => ({
-        url: "/auth/login/",
+        url: "/accounts/auth/login/",
         method: "POST",
         body: credentials,
       }),
       transformResponse: (response: any): LoginResponse => {
         return {
-          success: response.success,
+          success: response.status === "success" || response.code === 200,
           message: response.message,
           data: {
             user: {
-              id: response.data.user.user_id,
-              full_name: response.data.user.full_name,
-              email: response.data.user.email_address,
+              id: response.data.user.id,
+              email: response.data.user.email,
+              name: response.data.user.name,
               phone_number: response.data.user.phone_number,
               role: response.data.user.role,
-              is_email_verified: response.data.user.is_email_verified,
-              is_admin: response.data.user.is_admin,
+              image: response.data.user.image,
+              is_verified: response.data.user.is_verified,
+              is_approved: response.data.user.is_approved,
+              created_at: response.data.user.created_at,
+              client_profile: response.data.user.client_profile,
+              tradie_profile: response.data.user.tradie_profile,
+              // Backward compatibility mapping:
+              user_id: String(response.data.user.id),
+              full_name: response.data.user.name,
+              email_address: response.data.user.email,
+              is_email_verified: response.data.user.is_verified,
+              is_admin: response.data.user.role === "admin",
             },
             tokens: {
-              access: response.data.tokens.accessToken,
-              refresh: response.data.tokens.refreshToken,
+              access: response.data.tokens.access,
+              refresh: response.data.tokens.refresh,
             },
           },
         };
@@ -49,34 +59,33 @@ export const authApi = baseApi.injectEndpoints({
       ForgotPasswordRequest
     >({
       query: (data) => ({
-        url: "/auth/forgot-password/",
+        url: "/accounts/auth/forgot-password/send-otp/",
         method: "POST",
         body: data,
       }),
+      transformResponse: (response: any): ForgotPasswordResponse => {
+        return {
+          success: response.status === "success" || response.code === 200,
+          message: response.message,
+          data: response.data,
+        };
+      },
     }),
     verifyForgotPasswordOtp: builder.mutation<
       VerifyForgotPasswordOtpResponse,
       VerifyForgotPasswordOtpRequest
     >({
       query: (data) => ({
-        url: "/auth/verify-reset-otp/",
+        url: "/accounts/auth/forgot-password/verify-otp/",
         method: "POST",
         body: data,
       }),
       transformResponse: (response: any): VerifyForgotPasswordOtpResponse => {
         return {
-          success: response.success,
+          success: response.status === "success" || response.code === 200,
           message: response.message,
           data: {
-            user: {
-              email: response.data.user.email,
-              full_name: response.data.user.full_name,
-              role: response.data.user.role,
-            },
-            tokens: {
-              access: response.data.accessToken,
-              refresh: response.data.refreshToken,
-            },
+            reset_token: response.data.reset_token,
           },
         };
       },
@@ -86,20 +95,33 @@ export const authApi = baseApi.injectEndpoints({
       ResendForgotPasswordOtpRequest
     >({
       query: (data) => ({
-        url: "/auth/resend-forgot-password-otp/",
+        url: "/accounts/auth/forgot-password/send-otp/",
         method: "POST",
         body: data,
       }),
+      transformResponse: (response: any): ResendForgotPasswordOtpResponse => {
+        return {
+          success: response.status === "success" || response.code === 200,
+          message: response.message,
+          data: response.data,
+        };
+      },
     }),
     resetPassword: builder.mutation<
       ResetPasswordResponse,
       ResetPasswordRequest
     >({
       query: (data) => ({
-        url: "/auth/reset-password/",
+        url: "/accounts/auth/forgot-password/reset/",
         method: "POST",
         body: data,
       }),
+      transformResponse: (response: any): ResetPasswordResponse => {
+        return {
+          success: response.status === "success" || response.code === 200,
+          message: response.message,
+        };
+      },
       invalidatesTags: ["User"],
     }),
     changePassword: builder.mutation({

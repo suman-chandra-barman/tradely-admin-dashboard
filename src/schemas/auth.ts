@@ -61,12 +61,15 @@ export const validateVerifyEmail = (payload: VerifyEmailRequest) => {
 export const validateVerifyForgotPasswordOtp = (
   payload: VerifyForgotPasswordOtpRequest,
 ) => {
-  const emailError = validateEmail(payload.email_address);
+  const emailError = validateEmail(payload.email);
   if (emailError) return emailError;
-  return validateOtp(payload.otp_code, 6);
+  return validateOtp(payload.code, 6);
 };
 
-export const validateResetPassword = (payload: ResetPasswordRequest) => {
+export const validateResetPassword = (payload: {
+  new_password: string;
+  confirm_password: string;
+}) => {
   const passwordError = validatePassword(payload.new_password);
   if (passwordError) return passwordError;
   return validatePasswordMatch(payload.new_password, payload.confirm_password);

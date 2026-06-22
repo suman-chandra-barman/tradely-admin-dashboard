@@ -29,7 +29,7 @@ export default function SignInPage() {
     }
     try {
       const response = await login({
-        email_address: email.trim(),
+        email: email.trim(),
         password,
       }).unwrap();
 

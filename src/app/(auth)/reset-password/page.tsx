@@ -52,13 +52,24 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    const resetToken = typeof window !== "undefined" ? localStorage.getItem("resetToken") || "" : "";
+    if (!resetToken) {
+      toast.error("Reset token is missing or has expired. Please try again.");
+      router.push("/forgot-password");
+      return;
+    }
+
     try {
       const response = await resetPassword({
+        reset_token: resetToken,
         new_password: newPassword,
-        confirm_password: confirmPassword,
       }).unwrap();
 
       if (response?.success) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("resetToken");
+          localStorage.removeItem("forgotEmail");
+        }
         toast.success(response?.message || "Password reset successfully. Please sign in with your new password.");
         router.push("/signin");
         return;
