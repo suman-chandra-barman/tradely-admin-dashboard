@@ -1,6 +1,8 @@
 "use client";
 
-import { Ban, Trash2, Eye } from "lucide-react";
+import { Ban, Trash2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,103 +14,72 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  useGetUsersQuery,
+  useToggleBlockUserMutation,
+  useDeleteUserMutation,
+} from "@/redux/api/usersApi";
+import UserDetailsDialog from "@/components/users/UserDetailsDialog";
+import UsersTableSkeleton from "@/components/skeletons/UsersTableSkeleton";
 
-const users = [
-  {
-    name: "Sarah Johnson",
-    phone: "+61 412 345 678",
-    location: "Melbourne, VIC",
-    jobs: 8,
-    status: "Active",
-    created: "2025-12-15",
-    id: "PRD001",
-    email: "sarah@example.com",
-    joined: "05 April 2026",
-  },
-  {
-    name: "Mike Chen",
-    phone: "+61 423 456 789",
-    location: "Sydney, NSW",
-    jobs: 12,
-    status: "Active",
-    created: "2025-11-20",
-    id: "PRD002",
-    email: "mike@example.com",
-    joined: "20 March 2026",
-  },
-  {
-    name: "Emily Davis",
-    phone: "+61 434 567 890",
-    location: "Brisbane, QLD",
-    jobs: 5,
-    status: "Active",
-    created: "2026-01-08",
-    id: "PRD003",
-    email: "emily@example.com",
-    joined: "08 January 2026",
-  },
-  {
-    name: "James Wilson",
-    phone: "+61 445 678 901",
-    location: "Perth, WA",
-    jobs: 3,
-    status: "Blocked",
-    created: "2025-10-12",
-    id: "PRD004",
-    email: "james@example.com",
-    joined: "12 October 2025",
-  },
-  {
-    name: "Sophie Brown",
-    phone: "+61 456 789 012",
-    location: "Adelaide, SA",
-    jobs: 15,
-    status: "Active",
-    created: "2025-09-05",
-    id: "PRD005",
-    email: "sophie@example.com",
-    joined: "05 September 2025",
-  },
-  {
-    name: "Daniel Lee",
-    phone: "+61 467 890 123",
-    location: "Melbourne, VIC",
-    jobs: 7,
-    status: "Active",
-    created: "2026-02-01",
-    id: "PRD006",
-    email: "daniel@example.com",
-    joined: "01 February 2026",
-  },
-  {
-    name: "Olivia Martin",
-    phone: "+61 478 901 234",
-    location: "Sydney, NSW",
-    jobs: 0,
-    status: "Active",
-    created: "2026-04-10",
-    id: "PRD007",
-    email: "olivia@example.com",
-    joined: "10 April 2026",
-  },
-  {
-    name: "Liam Taylor",
-    phone: "+61 489 012 345",
-    location: "Canberra, ACT",
-    jobs: 9,
-    status: "Blocked",
-    created: "2025-08-22",
-    id: "PRD008",
-    email: "liam@example.com",
-    joined: "22 August 2025",
-  },
-];
+const formatDate = (dateString: string) => {
+  if (!dateString) return "";
+  try {
+    const d = new Date(dateString);
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    });
+  } catch {
+    return dateString;
+  }
+};
 
 export default function UsersTable() {
+  const searchParams = useSearchParams();
+  const status = searchParams.get("status") || "all";
+  const search = searchParams.get("search") || "";
+
+  const { data: response, isLoading, isFetching, isError } = useGetUsersQuery({
+    status,
+    search,
+  });
+
+  const [toggleBlock] = useToggleBlockUserMutation();
+  const [deleteUser] = useDeleteUserMutation();
+
+  const users = response?.data || [];
+
+  const handleToggleBlock = async (id: number, currentBlockedStatus: boolean) => {
+    try {
+      await toggleBlock({ id, is_blocked: !currentBlockedStatus }).unwrap();
+      toast.success(
+        `User successfully ${!currentBlockedStatus ? "blocked" : "unblocked"}.`
+      );
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update user status.");
+    }
+  };
+
+  const handleDelete = async (id: number, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete user ${name}?`)) {
+      return;
+    }
+    try {
+      await deleteUser(id).unwrap();
+      toast.success("User successfully deleted.");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to delete user.");
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between mb-4">
-        <CardTitle>All Users (8)</CardTitle>
+        <CardTitle>
+          All Users ({isLoading || isFetching ? "..." : users.length})
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
@@ -124,39 +95,83 @@ export default function UsersTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium text-zinc-900">
-                  {user.name}
-                </TableCell>
-                <TableCell>{user.phone}</TableCell>
-                <TableCell className="text-zinc-500">{user.location}</TableCell>
-                <TableCell>{user.jobs}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      user.status === "Active" ? "default" : "destructive"
-                    }
-                  >
-                    {user.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-zinc-500">{user.created}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
-                      <Ban className="h-4 w-4" />
-                    </button>
-                    <button className="rounded-full p-2 text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+            {isLoading || isFetching ? (
+              <UsersTableSkeleton />
+            ) : isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-8 text-rose-500 font-medium"
+                >
+                  Failed to load users. Please try again.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : users.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-8 text-zinc-500"
+                >
+                  No users found matching the filters.
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium text-zinc-900">
+                    {user.name}
+                  </TableCell>
+                  <TableCell>{user.phone_number || "—"}</TableCell>
+                  <TableCell className="text-zinc-500">
+                    {user.location || "—"}
+                  </TableCell>
+                  <TableCell>{user.total_jobs}</TableCell>
+                  <TableCell>
+                    <Badge variant={user.is_blocked ? "destructive" : "default"}>
+                      {user.is_blocked ? "Blocked" : "Active"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-zinc-500">
+                    {formatDate(user.created_at)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <UserDetailsDialog
+                        name={user.name}
+                        id={String(user.id)}
+                        email={
+                          user.email ||
+                          `${user.name.toLowerCase().replace(/\s+/g, "")}@example.com`
+                        }
+                        phone={user.phone_number || "—"}
+                        joined={formatDate(user.created_at)}
+                        status={user.is_blocked ? "Blocked" : "Active"}
+                      />
+                      <button
+                        onClick={() =>
+                          handleToggleBlock(user.id, user.is_blocked)
+                        }
+                        className={`rounded-full p-2 transition-colors ${
+                          user.is_blocked
+                            ? "text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                            : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700"
+                        }`}
+                        title={user.is_blocked ? "Unblock user" : "Block user"}
+                      >
+                        <Ban className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user.id, user.name)}
+                        className="rounded-full p-2 text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+                        title="Delete user"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </CardContent>

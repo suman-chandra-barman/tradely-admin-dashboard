@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import UsersFilters from "@/components/users/UsersFilters";
 import UsersTable from "@/components/users/UsersTable";
 
@@ -10,8 +11,10 @@ export default function UsersPage() {
           Track user onboarding and manage account status.
         </p>
       </div>
-      <UsersFilters />
-      <UsersTable />
+      <Suspense fallback={<div className="h-40 w-full animate-pulse rounded-2xl bg-zinc-100" />}>
+        <UsersFilters />
+        <UsersTable />
+      </Suspense>
     </div>
   );
 }

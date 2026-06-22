@@ -13,6 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  useToggleBlockUserMutation,
+  useDeleteUserMutation,
+} from "@/redux/api/usersApi";
+import { toast } from "react-toastify";
 
 interface UserDetailsDialogProps {
   name: string;
@@ -31,10 +36,37 @@ export default function UserDetailsDialog({
   joined,
   status,
 }: UserDetailsDialogProps) {
+  const [toggleBlock, { isLoading: isSuspending }] = useToggleBlockUserMutation();
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+
+  const handleToggleBlock = async () => {
+    try {
+      const isBlocked = status === "Blocked";
+      await toggleBlock({ id: Number(id), is_blocked: !isBlocked }).unwrap();
+      toast.success(
+        `User successfully ${isBlocked ? "activated" : "suspended"}.`
+      );
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update user status.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete user ${name}?`)) {
+      return;
+    }
+    try {
+      await deleteUser(Number(id)).unwrap();
+      toast.success("User successfully deleted.");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to delete user.");
+    }
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100">
+        <button className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 transition-colors">
           <span className="sr-only">View details</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -51,7 +83,7 @@ export default function UserDetailsDialog({
           </svg>
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-xl animate-in fade-in zoom-in duration-200">
         <DialogCloseButton />
         <DialogHeader>
           <DialogTitle>User Details</DialogTitle>
@@ -102,8 +134,20 @@ export default function UserDetailsDialog({
           </div>
         </div>
         <div className="mt-6 flex items-center justify-end gap-3">
-          <Button variant="secondary">Suspend</Button>
-          <Button variant="destructive">Delete User</Button>
+          <Button
+            variant="secondary"
+            onClick={handleToggleBlock}
+            disabled={isSuspending}
+          >
+            {status === "Blocked" ? "Activate" : "Suspend"}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            Delete User
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
