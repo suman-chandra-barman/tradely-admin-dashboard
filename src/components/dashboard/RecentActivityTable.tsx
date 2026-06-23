@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -8,51 +11,50 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const rows = [
-  {
-    type: "New User",
-    name: "Sarah Johnson",
-    detail: "Melbourne, VIC",
-    time: "2 mins ago",
-    status: "New",
-    variant: "info",
-  },
-  {
-    type: "New Job",
-    name: "Plumbing Repair",
-    detail: "Posted by Mike Chen",
-    time: "15 mins ago",
-    status: "New Job",
-    variant: "warning",
-  },
-  {
-    type: "Job Completed",
-    name: "Kitchen Renovation",
-    detail: "By Alex Builder",
-    time: "1 hour ago",
-    status: "Completed",
-    variant: "default",
-  },
-  {
-    type: "New User",
-    name: "James Wilson",
-    detail: "Sydney, NSW",
-    time: "2 hours ago",
-    status: "New",
-    variant: "info",
-  },
-  {
-    type: "New Tradie",
-    name: "Emma Electrician",
-    detail: "Brisbane, QLD",
-    time: "3 hours ago",
-    status: "New Tradie",
-    variant: "secondary",
-  },
-];
+import { useGetRecentActivityQuery } from "@/redux/api/dashboardApi";
 
 export default function RecentActivityTable() {
+  const { data: response, isLoading } = useGetRecentActivityQuery({ limit: 10 });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const formatTimeAgo = (isoString: string) => {
+    try {
+      const date = new Date(isoString);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      if (diffMins < 1) return "Just now";
+      if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? "s" : ""} ago`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays === 1) return "Yesterday";
+      if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+      return date.toLocaleDateString();
+    } catch {
+      return isoString;
+    }
+  };
+
+  const getBadgeVariant = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case "new job":
+        return "warning";
+      case "new tradie":
+        return "secondary";
+      case "new user":
+        return "info";
+      default:
+        return "default";
+    }
+  };
+
+  const showSkeleton = !mounted || isLoading;
+
   return (
     <Card>
       <CardHeader>
@@ -70,17 +72,49 @@ export default function RecentActivityTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((row) => (
-              <TableRow key={`${row.type}-${row.name}`}>
-                <TableCell>{row.type}</TableCell>
-                <TableCell>{row.name}</TableCell>
-                <TableCell className="text-zinc-500">{row.detail}</TableCell>
-                <TableCell className="text-zinc-500">{row.time}</TableCell>
-                <TableCell>
-                  <Badge variant={row.variant as never}>{row.status}</Badge>
+            {showSkeleton ? (
+              [1, 2, 3, 4, 5].map((i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <div className="h-4 w-20 bg-zinc-200 rounded animate-pulse" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-40 bg-zinc-200 rounded animate-pulse" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-28 bg-zinc-100 rounded animate-pulse" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-16 bg-zinc-100 rounded animate-pulse" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-6 w-14 bg-zinc-200 rounded-full animate-pulse" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : response?.data?.activities?.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-6 text-zinc-500">
+                  No recent activity found.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              response?.data?.activities?.map((row: any, idx: number) => (
+                <TableRow key={idx}>
+                  <TableCell className="font-medium text-zinc-900">
+                    {row.activity_type}
+                  </TableCell>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell className="text-zinc-500">{row.details || "—"}</TableCell>
+                  <TableCell className="text-zinc-500">{formatTimeAgo(row.time)}</TableCell>
+                  <TableCell>
+                    <Badge variant={getBadgeVariant(row.activity_type) as any}>
+                      {row.status_label || row.activity_type}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </CardContent>
