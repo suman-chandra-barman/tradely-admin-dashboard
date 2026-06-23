@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useAppDispatch } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { toast } from "react-toastify";
+import LogoutConfirmation from "@/components/layout/LogoutConfirmation";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutGrid },
@@ -28,8 +30,10 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
   const handleLogout = () => {
+    setIsLogoutOpen(false);
     dispatch(logout());
     toast.success("Logged out successfully.");
     router.push("/signin");
@@ -62,13 +66,21 @@ export default function Sidebar() {
           })}
         </nav>
       </div>
-      <button
-        onClick={handleLogout}
-        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-zinc-500 hover:bg-zinc-100 cursor-pointer"
-      >
-        <LogOut className="h-4 w-4" />
-        Logout
-      </button>
+      <div>
+        <button
+          onClick={() => setIsLogoutOpen(true)}
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium text-zinc-500 hover:bg-zinc-100 cursor-pointer"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
+      </div>
+
+      <LogoutConfirmation
+        isOpen={isLogoutOpen}
+        onClose={() => setIsLogoutOpen(false)}
+        onConfirm={handleLogout}
+      />
     </aside>
   );
 }

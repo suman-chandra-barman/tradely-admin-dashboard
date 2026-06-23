@@ -15,12 +15,15 @@ import { logout, selectCurrentUser } from "@/redux/slices/authSlice";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { useGetProfileSettingsQuery } from "@/redux/api/settingsApi";
+import Link from "next/link";
+import LogoutConfirmation from "@/components/layout/LogoutConfirmation";
 
 export default function Topbar() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector(selectCurrentUser);
   const [mounted, setMounted] = useState(false);
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -44,6 +47,7 @@ export default function Topbar() {
     .toUpperCase() || "AD";
 
   const handleLogout = () => {
+    setIsLogoutOpen(false);
     dispatch(logout());
     toast.success("Logged out successfully.");
     router.push("/signin");
@@ -92,24 +96,28 @@ export default function Topbar() {
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer">
-              <User className="h-4 w-4" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <Settings className="h-4 w-4" />
-              Settings
+              <Link href="/settings" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Settings
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={handleLogout}
+              onClick={() => setIsLogoutOpen(true)}
               className="text-rose-500 focus:text-rose-500 cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
-              Sign Out
+               Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <LogoutConfirmation
+        isOpen={isLogoutOpen}
+        onClose={() => setIsLogoutOpen(false)}
+        onConfirm={handleLogout}
+      />
     </header>
   );
 }
