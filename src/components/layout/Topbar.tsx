@@ -58,10 +58,6 @@ export default function Topbar() {
   return (
     <header className="flex flex-wrap items-center justify-end gap-4 rounded-2xl border border-zinc-200/70 bg-white px-5 py-2">
       <div className="flex items-center gap-4">
-        <button className="relative rounded-full border border-zinc-200/70 bg-white p-2 text-zinc-500 shadow-sm">
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500" />
-          <Bell className="h-4 w-4" />
-        </button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             {showSkeleton ? (
